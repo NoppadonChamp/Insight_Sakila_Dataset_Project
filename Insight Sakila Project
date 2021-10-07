@@ -1,0 +1,642 @@
+Author : Noppadon Watchalachaitrakul at 25-Aug-2021
+
+____________________________________________________________________________________________________________________________
+
+	The Sakila database is a nicely normalised schema modelling a DVD rental store, featuring things like films, actors, 
+film-actor relationships, and a central inventory table that connects films, stores, and rentals. 
+	This project uses SQL to analyze Sakila Dataset for insights and interesting data such as sakila's rental shop with 
+the highest sales, List of the top 10 movies with the highest rental sales, The percentage of movie ratings (%) and else. 
+This project is part of the Practice SQL EBOOK by DataRockie.
+
+____________________________________________________________________________________________________________________________
+
+#1 Sakila database มีทั้งหมดกี่ตาราง ชื่อว่าอะไรบ้าง
+ 
+	สามารถหาคำตอบได้จากการอ่าน ER Diagram เลย sakila มีทั้งหมด 15 tables ชื่อว่า actor, address, city, 
+	country, customer, category, film, film actor, film category, inventory, language, payment,
+	rental, staff และ store
+
+
+#2 ตาราง actor และ flim มีทั้งหมดกี่ record ตามลำดับ
+
+	SQL code:
+
+		SELECT
+			(SELECT COUNT (*) FROM actor) AS n_record_actor,
+			(SELECT COUNT (*) FROM film) AS n_record_film ;
+ 
+
+	the Result:
+
+	    +----------------+---------------+
+	      n_record_actor | n_record_film
+	    +----------------+---------------+	
+	                 200 |	        1000
+	    +----------------+---------------+
+
+
+#3 คอลัมน์ postal_code ในตาราง address มีค่า NULL หรือเปล่า
+
+	SQL code:
+
+		SELECT 
+			address_id,
+			address,
+			postal_code
+		FROM address
+		WHERE postal_code IS NULL ;
+
+
+	the Result:
+
+		+------------+-----------------+-------------+
+                  address_id | address         | postal_code	
+		+------------+-----------------+-------------+ 
+		          47 | MySakila Drive  | NULL
+	        	  28 | MySQL Boulevard | NULL	
+			  23 | Workhaven Lane  | NULL
+		        1411 | Lillydale Drive | NULL 
+		+------------+-----------------+-------------+
+
+
+#4 หาจำนวนนักแสดงที่ชื่อขึ้นต้นด้วย P
+
+	SQL code:
+
+		SELECT 
+			actor_id,
+			first_name||' '||last_name as full_name
+		FROM actor
+		WHERE first_name REGEXP '^P' ;
+
+		-- OR --
+
+		SELECT 
+			actor_id,
+			first_name||' '||last_name as full_name
+		FROM actor
+		WHERE first_name LIKE 'P%' ;
+
+	the Result:
+
+		+----------+------------------+
+                  actor_id | full_name         
+		+----------+------------------+
+		         1 | PENELOPE GUINESS
+			46 | PARKER GOLDBERG
+			54 | PENELOPE PINKETT
+		       104 | PENELOPE CRONYN
+		       120 | PENELOPE MONROE 		   
+		+----------+------------------+
+
+
+#5 หาจำนวนนักแสดงที่ชื่อขึ้นต้นด้วย P หรือ A
+
+	SQL code:
+
+		SELECT 
+			actor_id,
+			first_name||' '||last_name as full_name
+		FROM actor
+		WHERE first_name REGEXP '^[PA]' ;
+
+		-- OR --
+
+		SELECT 
+			actor_id,
+			first_name||' '||last_name as full_name
+		FROM actor
+		WHERE first_name LIKE 'P%' OR first_name LIKE 'A%' ;
+
+
+	the Result:
+
+		+----------+--------------------+
+          	  actor_id | full_name         
+		+----------+--------------------+
+			 1 | PENELOPE GUINESS
+		 	29 | ALEC WAYNE
+			34 | AUDREY OLIVIER
+			46 | PARKER GOLDBERG
+			49 | ANNE CRONYN
+			54 | PENELOPE PINKETT
+			65 | ANGELA HUDSON
+			71 | ADAM GRANT
+			76 | ANGELINA ASTAIRE
+		       104 | PENELOPE CRONYN
+		       120 | PENELOPE MONROE
+	               125 | ALBERT NOLTE
+		       132 | ADAM HOPPER
+		       144 | ANGELA WITHERSPOON
+		       146 | ALBERT JOHANSSON
+		       165 | AL GARLAND
+	               173 | ALAN DREYFUSS
+		       190 | AUDREY BAILEY		   
+		+----------+--------------------+
+
+
+#6 รายชื่อนักแสดงที่เล่นหนังมากที่สุด 10 อันดับแรก
+
+	SQL code:
+
+		SELECT 
+			A.actor_id,
+			A.first_name,
+			A.last_name,
+			COUNT(*) AS n_film
+		FROM actor A
+		JOIN film_actor B ON A.actor_id = B.actor_id
+		GROUP BY A.first_name, A.last_name
+		ORDER BY n_film DESC
+		LIMIT 10 ;
+
+
+	the Result:
+
+		+----------+------------+--------------+--------+
+          	  actor_id | first_name | last_name    | n_film
+		+----------+------------+--------------+--------+
+	               101 | SUSAN	|  DAVIS       |     54
+		       107 | GINA	|  DEGENERES   |     42
+		       102 | WALTER	|  TORN	       |     41
+		       198 | MARY	|  KEITEL      |     40
+		       181 | MATTHEW	|  CARREY      |     39
+			23 | SANDRA	|  KILMER      |     37
+			81 | SCARLETT	|  DAMON       |     36
+		       144 | ANGELA	|  WITHERSPOON |     35
+		       106 | GROUCHO	|  DUNST       |     35
+		        60 | HENRY	|  BERRY       |     35			   
+		+----------+------------+--------------+--------+
+
+
+7# คอลัมน์ rating ในตาราง film มีค่าอะไรบ้าง และแต่ละค่ามีจำนวน film เท่าไหร่
+
+	SQL code:
+
+		SELECT
+			rating,
+			COUNT(*) AS n_film
+		FROM film
+		GROUP BY  rating
+		ORDER BY  n_film DESC;
+
+	the Result:
+
+		+--------+--------+
+                  rating | n_film
+		+--------+--------+
+		  PG-13	 |    223
+		  NC-17	 |    210
+		  R	 |    195
+	          PG	 |    194
+		  G	 |    178
+		+--------+--------+	   
+
+
+#8 หนังเรท R มีสัดส่วนเท่าไหร่ (%) ในตาราง film
+
+	SQL code:
+
+		SELECT
+			rating,
+			n_film,
+			CAST(n_film AS REAL) / total_film *100 AS rating_percent
+		FROM(
+			SELECT	
+				rating,
+				COUNT(*) AS n_film,
+				(SELECT COUNT (*) FROM film) AS total_film
+			FROM film
+			GROUP BY rating
+			)
+		ORDER BY rating_percent DESC;
+
+
+	the Result:
+
+		+--------+--------+----------------+
+                  rating | n_film | rating_percent
+ 		+--------+--------+----------------+
+		  PG-13	 |    223 |           22.3
+		  NC-17	 |    210 |	      21.0
+		  R      |    195 |           19.5
+	          PG	 |    194 |    	      19.4
+		  G      |    178 |           17.8
+		+--------+--------+----------------+	 
+
+
+#9 สร้าง email ให้กับนักลงทุนในรูปแบบ first_name.lastname@sakila.com  
+
+	SQL code:
+
+		SELECT
+			first_name,
+			last_name,
+			LOWER(first_name)||'.'||LOWER(last_name)||'@sakila.com' AS email
+		FROM actor;
+
+
+	the Result:
+
+		+------------+--------------+--------------------------------+
+                  first_name | last_name    | email
+		+------------+--------------+--------------------------------+
+		  PENELOPE   | GUINESS	    | penelope.guiness@sakila.com
+		  NICK	     | WAHLBERG	    | nick.wahlberg@sakila.com
+		  ED	     | CHASE        | ed.chase@sakila.com
+		  JENNIFER   | DAVIS	    | jennifer.davis@sakila.com
+		  JOHNNY     | LOLLOBRIGIDA | johnny.lollobrigida@sakila.com 
+		  BETTE	     | NICHOLSON    | bette.nicholson@sakila.com
+		  GRACE	     | MOSTEL	    | grace.mostel@sakila.com
+		  MATTHEW    | JOHANSSON    | matthew.johansson@sakila.com
+		  JOE	     | SWANK	    | joe.swank@sakila.com
+		  CHRISTIAN  | GABLE	    | christian.gable@sakila.com
+		+----------- +--------------+--------------------------------+
+		(Output limit exceeded, 10 of 200 total rows shown)
+
+
+#10 ปรับ format ชื่อจริงและนามสกุลของลูกค้า ให้ตัวแรกของชื่อจริงและนามสกุลเป็นตัวพิมพ์ใหญ่เท่านั้น 
+
+	SQL code:
+
+		SELECT
+			UPPER(SUBSTR(first_name,1,1))||LOWER(SUBSTR(first_name,2)) AS first_name,
+			
+			UPPER(SUBSTR(last_name,1,1))||LOWER(SUBSTR(last_name,2)) AS last_name
+		FROM customer;
+
+
+	the Result:
+
+		+------------+-----------+
+          	  first_name | last_name |
+		+------------+-----------+
+                  Mary	     | Smith
+		  Patricia   | Johnson
+		  Linda	     | Williams
+		  Barbara    | Jones
+		  Elizabeth  | Brown
+		  Jennifer   | Davis
+		  Maria	     | Miller
+		  Susan	     | Wilson
+		  Margaret   | Moore
+		  Dorothy    | Taylor
+		+------------+-----------+
+		(Output limit exceeded, 10 of 599 total rows shown)
+
+
+#11 แสดงข้อมูลส่วนตัวของลูกค้าที่อาศัยอยู่ในประเทศญี่ปุ่น ทั้ง ชื่อจริง นามสกุลจริง ที่อยู่ และชื่อเมือง  
+
+	SQL code:
+
+		SELECT
+			A.customer_id,
+			A.first_name,
+			A.last_name,
+			B.address,
+			C.city,
+			D.country
+		FROM customer A
+		JOIN address B ON A.address_id = B.address_id
+		JOIN city C ON B.city_id = C.city_id
+		JOIN country D ON C.country_id = D.country_id
+		WHERE D.country = 'Japan';
+
+
+	the Result:
+
+		+-------------+------------+-----------+-----------------------------------+--------------+---------+
+                  customer_id |	first_name | last_name | address                           | city	  | country 
+                +-------------+------------+-----------+-----------------------------------+--------------+---------+
+		            1 |	MARY	   | SMITH     | 1913 Hanoi Way	         	   | Sasebo	  | Japan
+		           11 |	LISA	   | ANDERSON  | 1542 Tarlac Parkway	 	   | Sagamihara	  | Japan
+		           29 |	ANGELA	   | HERNANDEZ | 786 Aurora Avenue		   | Shimonoseki  | Japan
+			   34 |	REBECCA	   | SCOTT     | 61 Tama Street		  	   | Kurashiki	  | Japan
+		           53 |	HEATHER	   | MORRIS    | 17 Kabul Boulevard	           | Nagareyama	  | Japan
+		           54 |	TERESA	   | ROGERS    | 1964 Allappuzha (Alleppey) Street | Iwakuni	  | Japan
+	                   79 |	RACHEL	   | BARNES    | 586 Tete Way	        	   | Kamakura	  | Japan
+			  141 | DEBBIE	   | REYES     | 928 Jaffna Loop	   	   | Fukuyama	  | Japan
+		          147 |	JOANNE	   | ROBERTSON | 1337 Lincoln Parkway	     	   | Urawa	  | Japan
+			  163 | CATHY	   | SPENCER   | 1287 Xiangfan Boulevard	   | Kakamigahara | Japan
+		+-------------+------------+-----------+-----------------------------------+--------------+---------+
+		(Output limit exceeded, 10 of 31 total rows shown)
+
+
+#12 แสดงช้อมูลรายชื่อ หนัง comedy ที่ได้เรทติ้ง PG 
+
+	SQL code:
+
+		SELECT 
+			A.film_id,
+			A.title,
+			C.name AS category,
+			A.rating
+		FROM film A
+		JOIN film_category B USING (film_id)
+		JOIN category C USING (category_id)
+		WHERE (A.RATING = 'PG') AND (C.name = 'Comedy');
+
+
+	the Result:
+
+		+---------+-----------------------+----------+--------+
+                  film_id | title	          | category | rating
+                +---------+-----------------------+----------+--------+
+		       99 | BRINGING HYSTERICAL	  | Comedy   | PG
+		      188 | CRAZY HOME	          | Comedy   | PG
+		      265 | DYING MAKER	          | Comedy   | PG
+	              308 | FERRIS MOTHER	  | Comedy   | PG
+	              317 | FIREBALL PHILADELPHIA | Comedy   | PG
+		      404 | HATE HANDICAP	  | Comedy   | PG
+	              410 | HEAVEN FREEDOM	  | Comedy   | PG
+	              443 | HURRICANE AFFAIR	  | Comedy   | PG
+		      524 | LION UNCUT	          | Comedy   | PG
+		      555 | MALLRATS UNITED       | Comedy   | PG
+		      660 | PARTY KNOCK	          | Comedy   | PG
+		      680 | PINOCCHIO SIMON       | Comedy   | PG
+		      814 | SNATCH SLIPPER	  | Comedy   | PG
+		      837 | STAGE WORLD		  | Comedy   | PG
+		      871 | SWEDEN SHINING        | Comedy   | PG
+		      906 | TRAMP OTHERS	  | Comedy   | PG
+		+---------+-----------------------+----------+--------+
+
+
+#13 ร้านเช่าของ sakila สาขาไหนที่มีรายได้จากการเช่าหนังสูงที่สุด
+
+	SQL code:
+
+		SELECT	
+			A.store_id,
+			SUM(D.amount) AS total
+		FROM store A
+		JOIN inventory B USING(store_id)
+		JOIN rental C USING(inventory_id)
+		JOIN payment D USING(rental_id)
+		GROUP BY 1
+		ORDER BY 2 DESC;
+
+
+	the Result:
+
+	    +-------+-----------------+
+	      store | total
+	    +-------+-----------------+	
+	          2 | 33726.770000005 
+		  1 | 33679.790000005    
+	    +-------+-----------------+
+
+
+#14 แสดงข้อมูลรายได้ปี2005 ของร้านเช่าหนังสือทั้งสองสาขาของ sakila มาเปรียบเทียบกันเป็นรายเดือน
+
+	SQL code:
+
+		SELECT
+			A.store_id,
+			B.address,
+			STRFTIME('%Y-%m', D.payment_date) AS year_month,
+			COUNT(*) AS Total_quantity,
+			SUM(D.amount) AS total_sales
+		FROM store A
+		JOIN address B ON A.address_id = B.address_id
+		JOIN staff C ON A.store_id = C.store_id
+		JOIN payment D ON C.staff_id = D.staff_id
+		WHERE STRFTIME('%Y', D.payment_date) LIKE '2005'
+		GROUP BY 1, 2, 3
+		ORDER BY 1, 3;
+
+
+	the Result:
+
+	    +----------+-------------------+------------+----------------+-------------------+
+	      store_id | address           | year_month	| Total_quantity | total_sales       
+	    +----------+-------------------+------------+----------------+-------------------+         
+		     1 | 47 MySakila Drive |	2005-05	|            617 | 2621.82999999997
+		     1 | 47 MySakila Drive |	2005-06	|           1164 | 4776.35999999986
+		     1 | 47 MySakila Drive |	2005-07	|	    3346 | 14003.5399999994
+		     1 | 47 MySakila Drive |	2005-08	|	    2835 | 11853.6499999995
+	             2 | 47 MySakila Drive |	2005-05	|	     540 | 2202.6
+		     2 | 47 MySakila Drive |	2005-06	|	    1148 | 4855.51999999986
+		     2 | 47 MySakila Drive |	2005-07	| 	    3365 | 14370.3499999994
+		     2 | 47 MySakila Drive |	2005-08	| 	    2852 | 12218.4799999995
+            +----------+-------------------+------------+----------------+-------------------+
+
+
+#15 แสดงรายชื่อ ที่อยู่ และรหัสไปรษณีย์ของลุกค้าที่ยังไมได้คืนวีดีโอที่ยืมไป
+
+	SQL code:
+
+		SELECT
+			B.first_name,
+			B.last_name,
+			A.address,
+			A.postal_code,
+			CASE WHEN C.return_date IS NULL 
+				 THEN 'Yes' ELSE 'No' 
+			END AS not_return
+		FROM address A
+		JOIN customer B USING(address_id)
+		JOIN rental C USING(customer_id)
+		WHERE C.return_date IS NULL;	
+
+
+	the Result:
+
+	    +------------+-----------+--------------------------------------+-------------+------------+
+	      first_name   last_name | address             	            | postal_code | not_return
+	    +------------+-----------+--------------------------------------+-------------+------------+
+	      GAIL	 | KNIGHT    | 185 Novi Sad Place		    | 41778	  | Yes
+	      GREGORY	 | MAULDIN   | 507 Smolensk Loop		    | 22971	  | Yes
+	      LOUISE	 | JENKINS   | 929 Tallahassee Loop		    | 74671	  | Yes
+	      WILLIE	 | HOWELL    | 1244 Allappuzha (Alleppey) Place     | 20657	  | Yes
+	      EMILY	 | DIAZ	     | 588 Vila Velha Manor		    | 51540	  | Yes
+	      LAURIE	 | LAWRENCE  | 9 San Miguel de Tucumn Manor	    | 90845	  | Yes
+	      LISA	 | ANDERSON  | 1542 Tarlac Parkway		    | 1027	  | Yes
+	      FREDDIE	 | DUGGAN    | 1103 Quilmes Boulevard	            | 52137	  | Yes
+	      HEATHER	 | MORRIS    | 17 Kabul Boulevard		    | 38594	  | Yes
+	      ROLAND	 | SOUTH     | 1993 0 Loop			    | 41214	  | Yes
+	    +------------+-----------+--------------------------------------+-------------+------------+
+	    (Output limit exceeded, 10 of 183 total rows shown)
+
+
+#16 แสดงรายชื่อหนังที่มีให้เช่าที่สาขา 1 หรือ 2 สาขาใดสาขาหนึ่งเท่านั้น
+
+	SQL code:
+
+		SELECT DISTINCT
+			A.film_id,
+			A.title,
+			A.release_year,
+			B.store_id
+		FROM film A
+		JOIN inventory B ON A.film_id = B.film_id
+		WHERE A.film_id IN (
+			SELECT film_id
+			FROM inventory
+			GROUP BY 1
+			HAVING COUNT(DISTINCT store_id) = 1
+		)
+		ORDER BY title;
+
+
+	the Result:
+
+	    +---------+---------------------+--------------+----------+	
+	      film_id |	title		    | release_year | store_id
+	    +---------+---------------------+--------------+----------+	
+		    2 |	ACE GOLDFINGER	    | 	      2006 | 	    2
+		    3 |	ADAPTATION HOLES    | 	      2006 | 	    2
+		    5 |	AFRICAN EGG	    |	      2006 | 	    2
+		    8 |	AIRPORT POLLOCK	    | 	      2006 | 	    2
+		   13 |	ALI FOREVER	    | 	      2006 | 	    2
+		   20 |	AMELIE HELLFIGHTERS | 	      2006 | 	    1
+		   24 |	ANALYZE HOOSIERS    |	      2006 | 	    1
+		   27 |	ANONYMOUS HUMAN	    | 	      2006 | 	    1
+	           28 |	ANTHEM LUKE	    |         2006 | 	    1
+		   29 | ANTITRUST TOMATOES  | 	      2006 | 	    1
+	    +---------+---------------------+--------------+----------+	  
+	    (Output limit exceeded, 10 of 395 total rows shown)
+
+
+#17 แสดงรายชื่อหนัง 10 อันดับแรกที่ได้รายได้จากการเช่าสูงที่สุด
+
+	SQL code:
+
+		SELECT	
+			A.film_id,
+			A.title,
+			SUM(D.amount) AS total_sale
+		FROM film A
+		JOIN inventory B USING(film_id)
+		JOIN rental C USING(inventory_id)
+		JOIN payment D USING(rental_id)
+		GROUP BY 1,2
+		ORDER BY 3 DESC
+		LIMIT 10 ;
+
+
+	the Result:
+
+	    +---------+---------------------+------------+
+	      film_id |	title		    | total_sale
+	    +---------+---------------------+------------+
+		  879 |	TELEGRAPH VOYAGE    | 231.73
+	          973 |	WIFE TURN	    | 223.69
+		 1000 |	ZORRO ARK	    | 214.69
+		  369 |	GOODFELLAS SALUTE   | 209.69
+	          764 |	SATURDAY LAMBS	    | 204.72
+		  893 |	TITANS JERK	    | 201.71
+		  897 |	TORQUE BOUND	    | 198.72
+		  403 |	HARRY IDAHO	    | 195.70
+		  460 |	INNOCENT USUAL	    | 191.74
+		  444 |	HUSTLER PARTY	    | 190.78
+	    +---------+---------------------+------------+
+
+
+#18 แสดงรายชื่อนักแสดง 10 อันดับสุดท้ายที่ได้รายได้จากการเช่าหนังต่ำที่สุด
+
+	SQL code:
+
+		SELECT	
+			A.actor_id,
+			A.first_name,
+			A.last_name,
+			SUM(F.amount) AS total_income
+		FROM actor A
+		JOIN film_actor B USING(actor_id)
+		JOIN film C USING(film_id) 
+		JOIN inventory D USING(film_id)
+		JOIN rental E USING(inventory_id)
+		JOIN payment F USING(rental_id)
+		GROUP BY 1,2,3
+		ORDER BY 4 
+		LIMIT 10 ;
+
+
+	the Result:
+
+	    +----------+------------+--------------+------------------+
+              actor_id | first_name | last_name    | total_income
+	    +----------+------------+--------------+------------------+
+		   148 | EMILY	    | DEE          | 883.850000000002
+		    31 | SISSY	    | SOBIESKI	   | 902.650000000002
+		    71 | ADAM	    | GRANT	   | 974.190000000002
+		    35 | JUDY	    | DEAN	   | 976.470000000002
+	            30 | SANDRA	    | PECK	   | 1040.12
+		     4 | JENNIFER   | DAVIS	   | 1052.27
+		   186 | JULIA	    | ZELLWEGER	   | 1064.79
+		   199 | JULIA	    | FAWCETT	   | 1189.42
+		     1 | PENELOPE   | GUINESS	   | 1230.94
+		   183 | RUSSELL    | CLOSE        | 1251.05
+            +----------+------------+--------------+------------------+
+
+
+#19 แสดงจำนวนวันที่ลูกค้ายืมของหนังแต่ละเรื่องในตาราง rental  
+
+	SQL code:
+
+		SELECT	
+			A.film_id,
+			A.title,
+			SUM(
+				CAST(	julianday(STRFTIME('%Y-%m-%d',C.return_date)) 
+						- julianday(STRFTIME('%Y-%m-%d',C.rental_date))
+						AS INT)
+				)
+			AS total_day
+		FROM film A
+		JOIN inventory B USING(film_id)
+		JOIN rental C USING(inventory_id)
+		WHERE C.rental_date IS NOT NULL
+		GROUP BY 1,2
+		ORDER BY 3 DESC ;
+
+
+	the Result:
+
+            +---------+---------------------+-----------+
+	      film_id |	title		    | today_day
+	    +---------+---------------------+-----------+
+	          730 |	RIDGEMONT SUBMARINE | 	    186
+	          109 |	BUTTERFLY CHOCOLAT  | 	    181
+	          331 |	FORWARD TEMPLE	    | 	    180
+                  891 |	TIMBERLAND SKY      | 	    180
+	          361 |	GLEAMING JAWBREAKER | 	    179
+	          418 |	HOBBIT ALIEN	    |	    178
+		  738 |	ROCKETEER MOTHER    | 	    177
+		  879 |	TELEGRAPH VOYAGE    | 	    175
+		  489 |	JUGGLER HARDLY	    | 	    172
+		  621 |	NETWORK PEAK	    |       172
+	    +---------+---------------------+-----------+
+	    (Output limit exceeded, 10 of 958 total rows shown)
+
+
+#20 แสดงรายได้จากการเช่าหนังแต่ละเดือน และสร้างคอลัมล์ผลรวมแบบ Cumulative sum ของรายได้แต่ละเดือน
+
+	SQL code:
+
+		SELECT
+			payment_date,
+			total_per_month,
+			SUM(total_per_month) OVER(ORDER BY payment_date) AS cumulative_total
+		FROM(
+			SELECT
+				STRFTIME('%Y-%m',payment_date) AS payment_date,
+				SUM(amount) AS total_per_month
+			FROM payment
+			GROUP BY 1
+			) ;
+
+	the Result:
+
+            +--------------+------------------+------------------+
+       	      payment_date | total_per_month  | cumulative_total
+       	    +--------------+------------------+------------------+
+	       2005-05	   | 4824.42999999986 | 4824.42999999986
+	       2005-06	   | 9631.87999999961 | 14456.3099999995
+	       2005-07	   | 28373.8900000038 | 42830.2000000033
+	       2005-08	   | 24072.1300000022 | 66902.3300000054
+	       2006-02	   | 514.180000000001 | 67416.5100000054
+	    +--------------+------------------+------------------+
+			     
+
+
